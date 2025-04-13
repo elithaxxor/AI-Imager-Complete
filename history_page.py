@@ -106,6 +106,15 @@ def show_folder_images(folder_id):
                                         help="Include image previews in the PDF export (may increase file size)",
                                         key="history_include_images")
     
+    # Add text area for folder description
+    folder_name = images[0].folder.name if images and images[0].folder else "folder"
+    folder_description = st.text_area(
+        "Folder Description (will be included in exports)",
+        value=f"Collection of images from folder '{folder_name}'",
+        height=100,
+        key="history_folder_description"
+    )
+    
     if st.button("Export Results", key="history_export_button"):
         # Construct a proper dataframe for export with all fields
         export_data = []
@@ -116,7 +125,9 @@ def show_folder_images(folder_id):
                 "object_name": img.object_name,
                 "description": img.description,
                 "confidence": img.confidence,
-                "processed_at": img.processed_at.strftime("%Y-%m-%d %H:%M:%S")
+                "processed_at": img.processed_at.strftime("%Y-%m-%d %H:%M:%S"),
+                "folder_description": folder_description,
+                "item_description": f"Image from folder '{folder_name}'"
             })
         
         export_df = pd.DataFrame(export_data)

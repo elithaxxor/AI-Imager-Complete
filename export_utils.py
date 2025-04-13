@@ -88,6 +88,17 @@ def export_to_pdf_simple(results_df, folder_name=None):
     pdf.set_font('Arial', '', 10)
     pdf.cell(0, 10, f'Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', 0, 1, 'C')
     
+    # Add folder description if available
+    if 'folder_description' in results_df.columns and not results_df.empty:
+        pdf.ln(5)
+        pdf.set_font('Arial', 'B', 12)
+        pdf.cell(0, 10, 'Folder Description:', 0, 1)
+        pdf.set_font('Arial', '', 10)
+        
+        folder_desc = results_df.iloc[0].get('folder_description', 'No folder description available')
+        # Handle multiline text
+        pdf.multi_cell(0, 5, folder_desc)
+    
     # Add a line break
     pdf.ln(10)
     
@@ -157,6 +168,13 @@ def export_to_pdf_detailed(results_df, folder_name=None, include_images=True):
                             styles['Normal']))
     content.append(Spacer(1, 20))
     
+    # Add folder description if available
+    if 'folder_description' in results_df.columns and not results_df.empty:
+        content.append(Paragraph("Folder Description:", styles['Heading2']))
+        folder_desc = results_df.iloc[0].get('folder_description', 'No folder description available')
+        content.append(Paragraph(folder_desc, styles['Normal']))
+        content.append(Spacer(1, 10))
+    
     # Add summary table
     data = [['File Name', 'Object Name', 'Confidence']]
     for _, row in results_df.iterrows():
@@ -212,6 +230,11 @@ def export_to_pdf_detailed(results_df, folder_name=None, include_images=True):
         if 'description' in row:
             content.append(Paragraph("<b>Description:</b>", styles['Normal']))
             content.append(Paragraph(row['description'], styles['Normal']))
+        
+        # Add individual item description if available
+        if 'item_description' in row:
+            content.append(Paragraph("<b>Item Notes:</b>", styles['Normal']))
+            content.append(Paragraph(row['item_description'], styles['Normal']))
         
         content.append(Spacer(1, 10))
         content.append(Paragraph("-" * 80, styles['Normal']))

@@ -276,26 +276,40 @@ else:  # Process page (default)
                         include_images = st.checkbox("Include Images in PDF", value=True, 
                                                     help="Include image previews in the PDF export (may increase file size)")
                 
+                # Add text area for folder description
+                folder_name = os.path.basename(os.path.dirname(st.session_state.results.iloc[0]["file_path"]))
+                folder_description = st.text_area(
+                    "Folder Description (will be included in exports)",
+                    value=f"Collection of images from folder '{folder_name}'",
+                    height=100,
+                    key="process_folder_description"
+                )
+                
                 if st.button("Export Results"):
-                    folder_name = os.path.basename(os.path.dirname(st.session_state.results.iloc[0]["file_path"]))
+                    # Add folder description to the results DataFrame
+                    results_df = st.session_state.results.copy()
+                    results_df["folder_description"] = folder_description
+                    results_df["item_description"] = results_df.apply(
+                        lambda row: f"Image analysis of {row['file_name']} from folder {folder_name}", axis=1
+                    )
                     
                     if export_format == "CSV":
-                        export_filename = export_to_csv(st.session_state.results, folder_name)
+                        export_filename = export_to_csv(results_df, folder_name)
                         st.success(f"Results exported to {export_filename}")
                         
                     elif export_format == "Excel":
-                        export_filename = export_to_excel(st.session_state.results, folder_name)
+                        export_filename = export_to_excel(results_df, folder_name)
                         st.success(f"Results exported to {export_filename}")
                         
                     elif export_format == "PDF (Simple)":
                         with st.spinner("Generating PDF..."):
-                            export_filename = export_to_pdf_simple(st.session_state.results, folder_name)
+                            export_filename = export_to_pdf_simple(results_df, folder_name)
                         st.success(f"Results exported to {export_filename}")
                         
                     elif export_format == "PDF (Detailed)":
                         with st.spinner("Generating detailed PDF report with images..."):
                             include_imgs = include_images if 'include_images' in locals() else True
-                            export_filename = export_to_pdf_detailed(st.session_state.results, folder_name, include_imgs)
+                            export_filename = export_to_pdf_detailed(results_df, folder_name, include_imgs)
                         st.success(f"Results exported to {export_filename}")
                     
                     # Provide download link

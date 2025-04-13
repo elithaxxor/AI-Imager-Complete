@@ -67,6 +67,14 @@ def show_search_page():
                                             help="Include image previews in the PDF export (may increase file size)",
                                             key="search_include_images")
         
+        # Add text area for folder description
+        folder_description = st.text_area(
+            "Folder Description (will be included in exports)",
+            value=f"Collection of images related to '{search_query}'",
+            height=100,
+            key="search_folder_description"
+        )
+        
         if st.button("Export Results", key="search_export_button"):
             # Construct a proper dataframe for export with all fields
             export_data = []
@@ -78,7 +86,9 @@ def show_search_page():
                     "object_name": img.object_name,
                     "description": img.description,
                     "confidence": img.confidence,
-                    "processed_at": img.processed_at.strftime("%Y-%m-%d %H:%M:%S")
+                    "processed_at": img.processed_at.strftime("%Y-%m-%d %H:%M:%S"),
+                    "folder_description": folder_description,
+                    "item_description": f"Found in search for '{search_query}'"
                 })
             
             export_df = pd.DataFrame(export_data)
