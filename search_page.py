@@ -182,6 +182,27 @@ def show_search_result_details(image_id):
             st.markdown(image.description)
         
         # Additional metadata
-        st.markdown("### Metadata")
+        st.markdown("### File Metadata")
         st.markdown(f"**Processed Date:** {image.processed_at.strftime('%Y-%m-%d %H:%M:%S')}")
         st.markdown(f"**Full Path:** {image.file_path}")
+        
+        # Display image metadata if available
+        if hasattr(image, 'metadata_json') and image.metadata_json:
+            st.markdown("### Image Metadata")
+            try:
+                from utils import format_metadata_for_display
+                import json
+                
+                # Create metadata dictionary from database fields
+                metadata = {}
+                for field in ['width', 'height', 'camera_make', 'camera_model', 
+                            'focal_length', 'aperture', 'exposure_time', 'iso_speed',
+                            'date_taken', 'gps_latitude', 'gps_longitude',
+                            'file_size', 'file_type']:
+                    if hasattr(image, field):
+                        metadata[field] = getattr(image, field)
+                
+                metadata_text = format_metadata_for_display(metadata)
+                st.markdown(metadata_text)
+            except Exception as e:
+                st.error(f"Error displaying metadata: {str(e)}")

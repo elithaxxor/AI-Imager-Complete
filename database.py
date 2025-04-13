@@ -239,7 +239,7 @@ def get_image_by_path(file_path):
 
 def search_images(query):
     """
-    Search for images by object name or description
+    Search for images by object name, description, or metadata fields
     """
     db = get_db()
     return db.query(Image).filter(
@@ -247,5 +247,6 @@ def search_images(query):
         (Image.description.ilike(f"%{query}%")) |
         (Image.camera_make.ilike(f"%{query}%")) |
         (Image.camera_model.ilike(f"%{query}%")) |
-        (Image.file_type.ilike(f"%{query}%"))
+        (Image.file_type.ilike(f"%{query}%")) |
+        (Image.metadata_json.ilike(f"%{query}%"))
     ).all()
