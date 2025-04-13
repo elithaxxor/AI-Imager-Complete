@@ -32,7 +32,7 @@ if 'current_page' not in st.session_state:
     st.session_state.current_page = "process"
 
 # Main title
-st.title("AI Image Analyzer")
+st.title("mommies toy")
 st.subheader("Process folders of images to identify objects and generate descriptions")
 
 # Navigation
@@ -362,4 +362,4 @@ else:  # Process page (default)
 
 # Footer
 st.markdown("---")
-st.markdown("AI Image Analyzer - Powered by OpenAI")
+st.markdown("@copyleft -- don't do stupid shit with my work.")
