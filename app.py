@@ -182,7 +182,8 @@ else:  # Process page (default)
                                 file_path=img_path,
                                 object_name=result.get("object_name", "Unknown"),
                                 description=result.get("description", "No description available"),
-                                confidence=result.get("confidence", 0)
+                                confidence=result.get("confidence", 0),
+                                metadata=result.get("metadata", {})
                             )
                         
                         # Store result
@@ -348,6 +349,13 @@ else:  # Process page (default)
                     st.markdown(f"**Confidence:** {selected_result.get('confidence', 0):.2f}")
                     st.markdown("### Description")
                     st.markdown(selected_result.get('description', 'No description available'))
+                    
+                    # Display metadata if available
+                    if 'metadata' in selected_result:
+                        st.markdown("### Image Metadata")
+                        from utils import format_metadata_for_display
+                        metadata_text = format_metadata_for_display(selected_result.get('metadata', {}))
+                        st.markdown(metadata_text)
             else:
                 # No image selected
                 st.info("Select an image from the Results Table to view details")

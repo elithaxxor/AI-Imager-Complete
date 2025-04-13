@@ -4,7 +4,7 @@ import json
 from PIL import Image
 import io
 from openai import OpenAI
-from utils import is_valid_image
+from utils import is_valid_image, extract_image_metadata
 
 # Initialize OpenAI client
 # The newest OpenAI model is "gpt-4o" which was released May 13, 2024.
@@ -83,6 +83,12 @@ def process_single_image(image_path):
         # Analyze the image
         result = analyze_image_with_openai(base64_image)
         
+        # Extract metadata
+        metadata = extract_image_metadata(image_path)
+        
+        # Add metadata to the result
+        result['metadata'] = metadata
+        
         return result
     
     except Exception as e:
@@ -113,7 +119,10 @@ def process_image_folder(folder_path):
             result_with_path = {
                 "file_path": img_path,
                 "file_name": os.path.basename(img_path),
-                **result
+                "object_name": result.get("object_name", "Unknown"),
+                "description": result.get("description", "No description available"),
+                "confidence": result.get("confidence", 0),
+                "metadata": result.get("metadata", {})
             }
             
             results.append(result_with_path)
@@ -126,7 +135,8 @@ def process_image_folder(folder_path):
                 "file_name": os.path.basename(img_path),
                 "object_name": "Error",
                 "description": f"Failed to process: {str(e)}",
-                "confidence": 0
+                "confidence": 0,
+                "metadata": {}
             })
     
     return results

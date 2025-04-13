@@ -1,5 +1,6 @@
 import os
 import sqlalchemy as sa
+import json
 from sqlalchemy import create_engine, Column, Integer, String, Float, Text, DateTime, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
@@ -46,6 +47,22 @@ class Image(Base):
     description = Column(Text)
     confidence = Column(Float)
     processed_at = Column(DateTime, default=datetime.datetime.utcnow)
+    
+    # Metadata fields
+    metadata_json = Column(Text, nullable=True)  # Stores all metadata as JSON
+    width = Column(Integer, nullable=True)
+    height = Column(Integer, nullable=True)
+    camera_make = Column(String(255), nullable=True)
+    camera_model = Column(String(255), nullable=True)
+    date_taken = Column(DateTime, nullable=True)
+    focal_length = Column(Float, nullable=True)
+    exposure_time = Column(String(50), nullable=True)
+    aperture = Column(Float, nullable=True)
+    iso_speed = Column(Integer, nullable=True)
+    gps_latitude = Column(Float, nullable=True)
+    gps_longitude = Column(Float, nullable=True)
+    file_size = Column(Integer, nullable=True)
+    file_type = Column(String(50), nullable=True)
     
     # Relationship with folder
     folder = relationship("Folder", back_populates="images")
@@ -102,11 +119,52 @@ def add_folder(name, path):
     db.refresh(folder)
     return folder
 
-def add_image_result(folder_id, file_name, file_path, object_name, description, confidence):
+def add_image_result(folder_id, file_name, file_path, object_name, description, confidence, metadata=None):
     """
     Add an image analysis result to the database
+    
+    Args:
+        folder_id: ID of the folder containing the image
+        file_name: Name of the image file
+        file_path: Full path to the image file
+        object_name: Name of the object identified in the image
+        description: Description of the image
+        confidence: Confidence score of the analysis
+        metadata: Dictionary containing image metadata
     """
     db = get_db()
+    
+    # Process metadata
+    metadata_json = None
+    width = None
+    height = None
+    camera_make = None
+    camera_model = None
+    date_taken = None
+    focal_length = None
+    exposure_time = None
+    aperture = None
+    iso_speed = None
+    gps_latitude = None
+    gps_longitude = None
+    file_size = None
+    file_type = None
+    
+    if metadata:
+        metadata_json = json.dumps(metadata)
+        width = metadata.get('width')
+        height = metadata.get('height')
+        camera_make = metadata.get('camera_make')
+        camera_model = metadata.get('camera_model')
+        date_taken = metadata.get('date_taken')
+        focal_length = metadata.get('focal_length')
+        exposure_time = metadata.get('exposure_time')
+        aperture = metadata.get('aperture')
+        iso_speed = metadata.get('iso_speed')
+        gps_latitude = metadata.get('gps_latitude')
+        gps_longitude = metadata.get('gps_longitude')
+        file_size = metadata.get('file_size')
+        file_type = metadata.get('file_type')
     
     # Check if image already exists
     existing_image = db.query(Image).filter(Image.file_path == file_path).first()
@@ -116,6 +174,24 @@ def add_image_result(folder_id, file_name, file_path, object_name, description, 
         existing_image.description = description
         existing_image.confidence = confidence
         existing_image.processed_at = datetime.datetime.utcnow()
+        
+        # Update metadata if provided
+        if metadata:
+            existing_image.metadata_json = metadata_json
+            existing_image.width = width
+            existing_image.height = height
+            existing_image.camera_make = camera_make
+            existing_image.camera_model = camera_model
+            existing_image.date_taken = date_taken
+            existing_image.focal_length = focal_length
+            existing_image.exposure_time = exposure_time
+            existing_image.aperture = aperture
+            existing_image.iso_speed = iso_speed
+            existing_image.gps_latitude = gps_latitude
+            existing_image.gps_longitude = gps_longitude
+            existing_image.file_size = file_size
+            existing_image.file_type = file_type
+            
         db.commit()
         return existing_image
     
@@ -126,7 +202,21 @@ def add_image_result(folder_id, file_name, file_path, object_name, description, 
         file_path=file_path,
         object_name=object_name,
         description=description,
-        confidence=confidence
+        confidence=confidence,
+        metadata_json=metadata_json,
+        width=width,
+        height=height,
+        camera_make=camera_make,
+        camera_model=camera_model,
+        date_taken=date_taken,
+        focal_length=focal_length,
+        exposure_time=exposure_time,
+        aperture=aperture,
+        iso_speed=iso_speed,
+        gps_latitude=gps_latitude,
+        gps_longitude=gps_longitude,
+        file_size=file_size,
+        file_type=file_type
     )
     db.add(image)
     db.commit()
@@ -154,5 +244,8 @@ def search_images(query):
     db = get_db()
     return db.query(Image).filter(
         (Image.object_name.ilike(f"%{query}%")) | 
-        (Image.description.ilike(f"%{query}%"))
+        (Image.description.ilike(f"%{query}%")) |
+        (Image.camera_make.ilike(f"%{query}%")) |
+        (Image.camera_model.ilike(f"%{query}%")) |
+        (Image.file_type.ilike(f"%{query}%"))
     ).all()
