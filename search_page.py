@@ -6,14 +6,14 @@ from export_utils import export_to_csv, export_to_excel, export_to_pdf_simple, e
 
 def show_search_page():
     """
-    Display a search interface for finding images by object name or description
+    Display a search interface for finding images by object name, description, or metadata
     """
     st.header("Search Images")
-    st.write("Search the database for specific objects or descriptions")
+    st.write("Search the database for specific objects, descriptions, or metadata")
     
     # Search input
-    search_query = st.text_input("Search for objects or descriptions", 
-                                help="Enter keywords to search. Examples: 'cat', 'mountain', 'sunset'")
+    search_query = st.text_input("Search for objects, descriptions, or metadata", 
+                                help="Enter keywords to search. Examples: 'cat', 'mountain', 'sunset', 'iPhone', 'Canon', 'JPEG', etc.")
     
     # Execute search when a query is entered
     if search_query:
@@ -30,6 +30,8 @@ def show_search_page():
             "folder_name": img.folder.name if img.folder else "Unknown",
             "object_name": img.object_name, 
             "confidence": img.confidence,
+            "camera_info": f"{img.camera_make} {img.camera_model}".strip() if hasattr(img, 'camera_make') and img.camera_make else "",
+            "file_type": img.file_type.upper() if hasattr(img, 'file_type') and img.file_type else "",
             "description_snippet": img.description[:100] + "..." if len(img.description) > 100 else img.description
         } for img in results]
         
@@ -40,12 +42,14 @@ def show_search_page():
         
         # Display as a table
         st.dataframe(
-            result_df[["file_name", "folder_name", "object_name", "confidence", "description_snippet"]],
+            result_df[["file_name", "folder_name", "object_name", "confidence", "camera_info", "file_type", "description_snippet"]],
             column_config={
                 "file_name": "Image Name",
                 "folder_name": "Folder",
                 "object_name": "Object Identified",
                 "confidence": st.column_config.NumberColumn("Confidence", format="%.2f"),
+                "camera_info": "Camera",
+                "file_type": "Format",
                 "description_snippet": "Description Preview"
             },
             hide_index=True
