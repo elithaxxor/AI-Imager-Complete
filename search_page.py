@@ -1,145 +1,114 @@
 import streamlit as st
 import os
 import pandas as pd
-import database as db
+from database import search_images, get_db, Image
 
 def show_search_page():
     """
     Display a search interface for finding images by object name or description
     """
-    st.title("Search Image Database")
-    st.write("Search for images by object name or description")
+    st.header("Search Images")
+    st.write("Search the database for specific objects or descriptions")
     
-    # Search box
+    # Search input
     search_query = st.text_input("Search for objects or descriptions", 
-                               help="Enter keywords to search across all analyzed images")
+                                help="Enter keywords to search. Examples: 'cat', 'mountain', 'sunset'")
     
+    # Execute search when a query is entered
     if search_query:
-        # Perform search
-        search_results = db.search_images(search_query)
+        results = search_images(search_query)
         
-        if search_results:
-            st.success(f"Found {len(search_results)} results matching '{search_query}'")
-            
-            # Create a dataframe for display
-            results_data = []
-            for img in search_results:
-                results_data.append({
-                    "id": img.id,
-                    "folder": os.path.basename(os.path.dirname(img.file_path)),
-                    "file_name": img.file_name,
-                    "file_path": img.file_path,
-                    "object_name": img.object_name,
-                    "confidence": img.confidence,
-                    "description": img.description[:100] + "..." if len(img.description) > 100 else img.description
-                })
-            
-            results_df = pd.DataFrame(results_data)
-            
-            # Format for display
-            display_df = results_df.copy()
-            display_df["View Details"] = display_df.apply(
-                lambda row: f'<a href="#" id="search_{row["id"]}">View</a>', 
-                axis=1
-            )
-            
-            # Display the table with HTML
-            st.write(
-                display_df[["folder", "file_name", "object_name", "description", "View Details"]]
-                .rename(columns={
-                    "folder": "Folder", 
-                    "file_name": "File Name", 
-                    "object_name": "Object",
-                    "description": "Description"
-                })
-                .to_html(escape=False, index=False), 
-                unsafe_allow_html=True
-            )
-            
-            # JavaScript to handle clicks
-            st.markdown("""
-            <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const links = document.querySelectorAll('a[id^="search_"]');
-                links.forEach(link => {
-                    link.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        const imageId = this.id.split('_')[1];
-                        window.parent.postMessage({
-                            type: 'streamlit:setComponentValue',
-                            value: imageId
-                        }, '*');
-                    });
-                });
-            });
-            </script>
-            """, unsafe_allow_html=True)
-            
-            # Use st.text_input as a hack to receive the clicked value
-            clicked_image_id = st.text_input("", key="search_clicked_id", label_visibility="collapsed")
-            
-            # If an image is selected, show its details
-            if clicked_image_id and clicked_image_id.isdigit():
-                image_id = int(clicked_image_id)
-                show_search_result_details(image_id)
-        else:
+        if not results:
             st.info(f"No results found for '{search_query}'")
+            return
+        
+        # Convert to DataFrame for better display
+        result_data = [{
+            "id": img.id,
+            "file_name": img.file_name, 
+            "folder_name": img.folder.name if img.folder else "Unknown",
+            "object_name": img.object_name, 
+            "confidence": img.confidence,
+            "description_snippet": img.description[:100] + "..." if len(img.description) > 100 else img.description
+        } for img in results]
+        
+        result_df = pd.DataFrame(result_data)
+        
+        # Display results count
+        st.subheader(f"Found {len(results)} results")
+        
+        # Display as a table
+        st.dataframe(
+            result_df[["file_name", "folder_name", "object_name", "confidence", "description_snippet"]],
+            column_config={
+                "file_name": "Image Name",
+                "folder_name": "Folder",
+                "object_name": "Object Identified",
+                "confidence": st.column_config.NumberColumn("Confidence", format="%.2f"),
+                "description_snippet": "Description Preview"
+            },
+            hide_index=True
+        )
+        
+        # Let user select an image to view details
+        selected_image_id = st.selectbox(
+            "Select an image to view details",
+            options=result_df["id"].tolist(),
+            format_func=lambda x: f"{result_df[result_df['id'] == x]['file_name'].iloc[0]} ({result_df[result_df['id'] == x]['folder_name'].iloc[0]})"
+        )
+        
+        if selected_image_id:
+            show_search_result_details(selected_image_id)
     else:
-        # Show some statistics about the database
-        db_session = db.SessionLocal()
-        folders_count = db_session.query(db.Folder).count()
-        images_count = db_session.query(db.Image).count()
-        db_session.close()
-        
-        st.info(f"Database contains {images_count} analyzed images across {folders_count} folders")
-        
-        # Advanced search options (placeholders for future development)
-        with st.expander("Advanced Search Options"):
-            st.write("Future versions will include:")
-            st.write("- Filtering by confidence level")
-            st.write("- Filtering by date processed")
-            st.write("- Searching by image similarity")
-            st.write("- Exporting search results")
+        st.info("Enter a search term to find images")
 
 def show_search_result_details(image_id):
     """
     Display details for a specific image from search results
     """
-    # Get the image
-    db_session = db.SessionLocal()
-    image = db_session.query(db.Image).filter(db.Image.id == image_id).first()
+    # Find the image in the database
+    db = next(get_db())
+    image = db.query(Image).filter(Image.id == image_id).first()
     
     if not image:
         st.error("Image not found")
         return
     
-    st.subheader("Image Analysis Details")
-    
-    # Display image and details
+    # Display image details
     col1, col2 = st.columns([1, 2])
     
-    with col1:
-        st.subheader("Image")
-        if os.path.exists(image.file_path):
+    # Check if file exists first
+    if os.path.exists(image.file_path):
+        with col1:
+            st.subheader("Image")
             st.image(image.file_path, use_column_width=True)
-        else:
-            st.error("Image file not found at the stored path")
+    else:
+        with col1:
+            st.subheader("Image")
+            st.warning("Image file not found at path: " + image.file_path)
     
     with col2:
         st.subheader("Analysis Results")
-        folder_name = os.path.basename(os.path.dirname(image.file_path))
-        st.markdown(f"**Folder:** {folder_name}")
         st.markdown(f"**File:** {image.file_name}")
+        st.markdown(f"**Folder:** {image.folder.name if image.folder else 'Unknown'}")
         st.markdown(f"**Object Identified:** {image.object_name}")
         st.markdown(f"**Confidence:** {image.confidence:.2f}")
         st.markdown("### Description")
         st.markdown(image.description)
-        st.markdown(f"**Processed at:** {image.processed_at.strftime('%Y-%m-%d %H:%M:%S')}")
-    
-    # Export options
-    with st.expander("Export Options"):
-        export_format = st.selectbox("Export Format", ["CSV", "JSON"], key="search_export_format")
         
-        if st.button("Export This Result", key="search_export_button"):
-            # Code for exporting the result
-            pass
+        # Highlight search terms in description
+        if 'search_query' in st.session_state and st.session_state.search_query:
+            highlighted_desc = image.description
+            for term in st.session_state.search_query.split():
+                if len(term) > 2:  # Only highlight terms with more than 2 characters
+                    highlighted_desc = highlighted_desc.replace(
+                        term, f"<mark>{term}</mark>"
+                    )
+            st.markdown(highlighted_desc, unsafe_allow_html=True)
+        else:
+            st.markdown(image.description)
+        
+        # Additional metadata
+        st.markdown("### Metadata")
+        st.markdown(f"**Processed Date:** {image.processed_at.strftime('%Y-%m-%d %H:%M:%S')}")
+        st.markdown(f"**Full Path:** {image.file_path}")
