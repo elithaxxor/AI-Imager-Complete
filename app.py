@@ -47,7 +47,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 with col1:
     if st.button("Process Images", use_container_width=True):
         st.session_state.current_page = "process"
@@ -60,6 +60,11 @@ with col3:
     if st.button("Search Database", use_container_width=True):
         st.session_state.current_page = "search"
         st.rerun()
+with col4:
+    if st.button("Download Code", use_container_width=True):
+        # Redirect to the code download page
+        import streamlit as st
+        st.switch_page("download_code.py")
 
 # Sidebar for folder selection
 with st.sidebar:
