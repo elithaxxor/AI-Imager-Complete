@@ -13,7 +13,7 @@ This application enables users to process large collections of images (up to 5,0
 - **Database Integration**: Store and retrieve analysis results with PostgreSQL
 - **Search Functionality**: Find specific images by object name or description
 - **History Browsing**: Review previously analyzed image collections
-- **Export Options**: Save analysis results as CSV or Excel files
+- **Export Options**: Save analysis results as CSV, Excel or PDF files (simple or detailed with images) including folder and item descriptions
 
 ## Technical Architecture
 
@@ -99,10 +99,19 @@ This will start the web application on `http://localhost:5000`.
 
 ### Exporting Results
 
-After processing images:
-1. In the Results Table view, select an export format (CSV or Excel)
-2. Click "Export Results"
-3. The file will be saved in the current working directory
+After processing images, viewing history, or searching:
+1. Select an export format (CSV, Excel, PDF Simple, or PDF Detailed)
+2. For PDF exports, choose whether to include images
+3. Add a custom folder description that will be included in the exports
+4. Click "Export Results"
+5. Download the file using the download button that appears
+6. The file will be saved in the current working directory with timestamps
+
+PDF Detailed exports include:
+- Folder description
+- Summary table of all images
+- Individual image previews (if selected)
+- Detailed descriptions for each item
 
 ## Cost Considerations
 
