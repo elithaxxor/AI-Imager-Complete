@@ -8,6 +8,7 @@ from utils import get_all_image_files, is_valid_image
 import database as db
 from history_page import show_history_page
 from search_page import show_search_page
+from export_utils import export_to_csv, export_to_excel, export_to_pdf_simple, export_to_pdf_detailed
 
 # Set page config
 st.set_page_config(
@@ -265,20 +266,46 @@ else:  # Process page (default)
                 # Export options
                 st.subheader("Export Results")
                 
-                export_format = st.selectbox("Export Format", ["CSV", "Excel"])
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    export_format = st.selectbox("Export Format", ["CSV", "Excel", "PDF (Simple)", "PDF (Detailed)"])
+                
+                with col2:
+                    if export_format.startswith("PDF"):
+                        include_images = st.checkbox("Include Images in PDF", value=True, 
+                                                    help="Include image previews in the PDF export (may increase file size)")
                 
                 if st.button("Export Results"):
-                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                     folder_name = os.path.basename(os.path.dirname(st.session_state.results.iloc[0]["file_path"]))
                     
                     if export_format == "CSV":
-                        export_filename = f"image_analysis_{folder_name}_{timestamp}.csv"
-                        st.session_state.results.to_csv(export_filename, index=False)
+                        export_filename = export_to_csv(st.session_state.results, folder_name)
                         st.success(f"Results exported to {export_filename}")
-                    else:
-                        export_filename = f"image_analysis_{folder_name}_{timestamp}.xlsx"
-                        st.session_state.results.to_excel(export_filename, index=False)
+                        
+                    elif export_format == "Excel":
+                        export_filename = export_to_excel(st.session_state.results, folder_name)
                         st.success(f"Results exported to {export_filename}")
+                        
+                    elif export_format == "PDF (Simple)":
+                        with st.spinner("Generating PDF..."):
+                            export_filename = export_to_pdf_simple(st.session_state.results, folder_name)
+                        st.success(f"Results exported to {export_filename}")
+                        
+                    elif export_format == "PDF (Detailed)":
+                        with st.spinner("Generating detailed PDF report with images..."):
+                            include_imgs = include_images if 'include_images' in locals() else True
+                            export_filename = export_to_pdf_detailed(st.session_state.results, folder_name, include_imgs)
+                        st.success(f"Results exported to {export_filename}")
+                    
+                    # Provide download link
+                    with open(export_filename, "rb") as file:
+                        btn = st.download_button(
+                            label="Download File",
+                            data=file,
+                            file_name=os.path.basename(export_filename),
+                            mime="application/octet-stream"
+                        )
             else:
                 st.info("No results to display")
         
