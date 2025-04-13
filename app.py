@@ -5,6 +5,7 @@ from datetime import datetime
 import time
 from image_processor import process_image_folder, process_single_image
 from utils import get_all_image_files, is_valid_image
+import database as db
 
 # Set page config
 st.set_page_config(
@@ -95,6 +96,10 @@ if st.session_state.processing and st.session_state.current_folder:
             results = []
             
             # Process each image
+            # Add folder to database
+            folder_name = os.path.basename(full_folder_path)
+            db_folder = db.add_folder(folder_name, full_folder_path)
+            
             for i, img_path in enumerate(image_files):
                 try:
                     # Update progress
@@ -102,8 +107,28 @@ if st.session_state.processing and st.session_state.current_folder:
                     progress_bar.progress(progress)
                     status_text.text(f"Processing image {i+1} of {total_images}: {os.path.basename(img_path)}")
                     
-                    # Process the image
-                    result = process_single_image(img_path)
+                    # Check if image already exists in database
+                    existing_image = db.get_image_by_path(img_path)
+                    if existing_image:
+                        # Use existing result
+                        result = {
+                            "object_name": existing_image.object_name,
+                            "description": existing_image.description,
+                            "confidence": existing_image.confidence
+                        }
+                    else:
+                        # Process the image
+                        result = process_single_image(img_path)
+                        
+                        # Save to database
+                        db.add_image_result(
+                            folder_id=db_folder.id,
+                            file_name=os.path.basename(img_path),
+                            file_path=img_path,
+                            object_name=result.get("object_name", "Unknown"),
+                            description=result.get("description", "No description available"),
+                            confidence=result.get("confidence", 0)
+                        )
                     
                     # Store result
                     result_with_path = {
