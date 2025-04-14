@@ -8,6 +8,7 @@ from utils import get_all_image_files, is_valid_image
 import database as db
 from history_page import show_history_page
 from search_page import show_search_page
+from dashboard_page import show_dashboard_page
 from export_utils import export_to_csv, export_to_excel, export_to_pdf_simple, export_to_pdf_detailed
 
 # Set page config
@@ -53,7 +54,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3, col4, col5 = st.columns(5)
 with col1:
     if st.button("Process Images", use_container_width=True):
         st.session_state.current_page = "process"
@@ -67,6 +68,10 @@ with col3:
         st.session_state.current_page = "search"
         st.rerun()
 with col4:
+    if st.button("Dashboard", use_container_width=True):
+        st.session_state.current_page = "dashboard"
+        st.rerun()
+with col5:
     if st.button("Download Code", use_container_width=True):
         # Redirect to the code download page
         import streamlit as st
@@ -129,6 +134,8 @@ if st.session_state.current_page == "history":
     show_history_page()
 elif st.session_state.current_page == "search":
     show_search_page()
+elif st.session_state.current_page == "dashboard":
+    show_dashboard_page()
 else:  # Process page (default)
     # Main content area for processing
     if st.session_state.processing and st.session_state.current_folder:
