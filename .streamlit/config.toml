@@ -1,16 +1,21 @@
 
-[server]
-headless = true
-address = "0.0.0.0"
-port = 5000
-
 [theme]
-base = "light"
-primaryColor = "#7C8AFF"
-backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F0F2F6"
-textColor = "#262730"
+primaryColor = "#4e89ae"
+backgroundColor = "#f5f7fa"
+secondaryBackgroundColor = "#e4ecf6"
+textColor = "#1e1e1e"
 font = "sans serif"
+
+[server]
+enableCORS = false
+enableXsrfProtection = true
+enableWebsocketCompression = true
+headless = true
+port = 5000
 
 [browser]
 gatherUsageStats = false
+
+[ui]
+hideTopBar = false
+hideSidebarNav = false

@@ -38,7 +38,7 @@ def show_history_page():
     # Sort by most recent first
     folder_df = folder_df.sort_values(by="processed_at", ascending=False)
     
-    # Display as a table
+    # Display as a table with mobile-friendly width
     st.dataframe(
         folder_df[["name", "processed_at", "image_count"]],
         column_config={
@@ -46,7 +46,8 @@ def show_history_page():
             "processed_at": st.column_config.DatetimeColumn("Processed Date", format="MMM DD, YYYY, hh:mm A"),
             "image_count": st.column_config.NumberColumn("Images")
         },
-        hide_index=True
+        hide_index=True,
+        use_container_width=True
     )
     
     # Let user select a folder to view details

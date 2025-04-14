@@ -350,18 +350,18 @@ else:  # Process page (default)
                 st.markdown('</div>', unsafe_allow_html=True)
                 
                 st.subheader("Analysis Results")
-                    st.markdown(f"**File:** {os.path.basename(selected_path)}")
-                    st.markdown(f"**Object Identified:** {selected_result.get('object_name', 'Unknown')}")
-                    st.markdown(f"**Confidence:** {selected_result.get('confidence', 0):.2f}")
-                    st.markdown("### Description")
-                    st.markdown(selected_result.get('description', 'No description available'))
+                st.markdown(f"**File:** {os.path.basename(selected_path)}")
+                st.markdown(f"**Object Identified:** {selected_result.get('object_name', 'Unknown')}")
+                st.markdown(f"**Confidence:** {selected_result.get('confidence', 0):.2f}")
+                st.markdown("### Description")
+                st.markdown(selected_result.get('description', 'No description available'))
 
-                    # Display metadata if available
-                    if 'metadata' in selected_result:
-                        st.markdown("### Image Metadata")
-                        from utils import format_metadata_for_display
-                        metadata_text = format_metadata_for_display(selected_result.get('metadata', {}))
-                        st.markdown(metadata_text)
+                # Display metadata if available
+                if 'metadata' in selected_result:
+                    st.markdown("### Image Metadata")
+                    from utils import format_metadata_for_display
+                    metadata_text = format_metadata_for_display(selected_result.get('metadata', {}))
+                    st.markdown(metadata_text)
             else:
                 # No image selected
                 st.info("Select an image from the Results Table to view details")
