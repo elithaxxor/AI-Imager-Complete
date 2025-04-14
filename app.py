@@ -10,6 +10,8 @@ from history_page import show_history_page
 from search_page import show_search_page
 from dashboard_page import show_dashboard_page
 from onboarding_tour import show_onboarding_tour
+from clustering_page import show_clustering_page
+from comparison_page import show_comparison_page
 from export_utils import export_to_csv, export_to_excel, export_to_pdf_simple, export_to_pdf_detailed
 
 # Set page config
