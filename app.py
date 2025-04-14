@@ -69,16 +69,16 @@ with col4:
 # Sidebar for folder selection
 with st.sidebar:
     st.header("Settings")
-    
+
     # Option to select parent directory
     parent_dir = st.text_input("Parent Directory Path", 
                               value=os.path.expanduser("~") if not st.session_state.current_folder else st.session_state.current_folder,
                               help="Enter the path to the directory containing your image folders")
-    
+
     if parent_dir and os.path.exists(parent_dir):
         # Get all subdirectories
         subdirs = [d for d in os.listdir(parent_dir) if os.path.isdir(os.path.join(parent_dir, d))]
-        
+
         if subdirs:
             # Folder selection dropdown
             selected_folder = st.selectbox(
@@ -86,19 +86,19 @@ with st.sidebar:
                 [""] + subdirs,
                 help="Choose a folder to analyze"
             )
-            
+
             if selected_folder:
                 folder_path = os.path.join(parent_dir, selected_folder)
-                
+
                 # Count images in the folder
                 image_files = get_all_image_files(folder_path)
-                
+
                 if image_files:
                     st.info(f"Found {len(image_files)} images in this folder")
-                    
+
                     # Store current folder
                     st.session_state.current_folder = parent_dir
-                    
+
                     # Process button
                     if st.button("Process Folder", use_container_width=True, disabled=st.session_state.processing):
                         st.session_state.processing = True
@@ -129,39 +129,39 @@ else:  # Process page (default)
                 if get_all_image_files(os.path.join(st.session_state.current_folder, d)):
                     selected_folder = d
                     break
-        
+
         if not selected_folder:
             st.error("Could not find a folder with valid images")
             st.session_state.processing = False
             st.rerun()
-            
+
         full_folder_path = os.path.join(st.session_state.current_folder, selected_folder)
-        
+
         # Display processing status
         with st.spinner("Processing images... This may take a while depending on the number of images."):
             # Create progress bar
             progress_bar = st.progress(0)
             status_text = st.empty()
-            
+
             # Get all images in the folder
             image_files = get_all_image_files(full_folder_path)
             total_images = len(image_files)
-            
+
             if total_images > 0:
                 results = []
-                
+
                 # Process each image
                 # Add folder to database
                 folder_name = os.path.basename(full_folder_path)
                 db_folder = db.add_folder(folder_name, full_folder_path)
-                
+
                 for i, img_path in enumerate(image_files):
                     try:
                         # Update progress
                         progress = (i + 1) / total_images
                         progress_bar.progress(progress)
                         status_text.text(f"Processing image {i+1} of {total_images}: {os.path.basename(img_path)}")
-                        
+
                         # Check if image already exists in database
                         existing_image = db.get_image_by_path(img_path)
                         if existing_image:
@@ -174,7 +174,7 @@ else:  # Process page (default)
                         else:
                             # Process the image
                             result = process_single_image(img_path)
-                            
+
                             # Save to database
                             db.add_image_result(
                                 folder_id=db_folder.id,
@@ -185,7 +185,7 @@ else:  # Process page (default)
                                 confidence=result.get("confidence", 0),
                                 metadata=result.get("metadata", {})
                             )
-                        
+
                         # Store result
                         result_with_path = {
                             "file_path": img_path,
@@ -195,10 +195,10 @@ else:  # Process page (default)
                             "confidence": result.get("confidence", 0)
                         }
                         results.append(result_with_path)
-                        
+
                         # Store in session state
                         st.session_state.processed_images[img_path] = result
-                    
+
                     except Exception as e:
                         st.error(f"Error processing {os.path.basename(img_path)}: {str(e)}")
                         # Add error entry
@@ -209,15 +209,15 @@ else:  # Process page (default)
                             "description": f"Failed to process: {str(e)}",
                             "confidence": 0
                         })
-                
+
                 # Convert results to DataFrame
                 df = pd.DataFrame(results)
-                
+
                 # Store results in session state
                 st.session_state.results = df
             else:
                 st.warning("No valid images found in the selected folder")
-        
+
         # Reset processing flag
         st.session_state.processing = False
         st.rerun()
@@ -226,24 +226,26 @@ else:  # Process page (default)
     if st.session_state.results is not None:
         # Create tabs for different views
         tab1, tab2 = st.tabs(["Results Table", "Detailed View"])
-        
+
         with tab1:
             # Display summary table
             st.subheader("Analysis Results")
-            
+
             # Convert DataFrame for display (hide file_path column)
             display_df = st.session_state.results.copy()
-            
+
             if not display_df.empty:
                 # Add clickable links in the table
                 display_df["View Details"] = display_df.apply(
                     lambda row: f'<a href="#" id="{row["file_path"]}">View</a>', 
                     axis=1
                 )
-                
+
                 # Display the table with HTML
+                st.markdown('<div class="card styled-table">', unsafe_allow_html=True) #Added
                 st.write(display_df.drop(columns=["file_path"]).to_html(escape=False, index=False), unsafe_allow_html=True)
-                
+                st.markdown('</div>', unsafe_allow_html=True) #Added
+
                 # JavaScript to handle clicks
                 st.markdown("""
                 <script>
@@ -262,26 +264,26 @@ else:  # Process page (default)
                 });
                 </script>
                 """, unsafe_allow_html=True)
-                
+
                 # Use st.text_input as a hack to receive the clicked value
                 clicked_path = st.text_input("", key="clicked_path", label_visibility="collapsed")
                 if clicked_path and clicked_path in st.session_state.processed_images:
                     st.session_state.selected_image = clicked_path
                     st.rerun()
-                
+
                 # Export options
                 st.subheader("Export Results")
-                
+
                 col1, col2 = st.columns(2)
-                
+
                 with col1:
                     export_format = st.selectbox("Export Format", ["CSV", "Excel", "PDF (Simple)", "PDF (Detailed)"])
-                
+
                 with col2:
                     if export_format.startswith("PDF"):
                         include_images = st.checkbox("Include Images in PDF", value=True, 
                                                     help="Include image previews in the PDF export (may increase file size)")
-                
+
                 # Add text area for folder description
                 folder_name = os.path.basename(os.path.dirname(st.session_state.results.iloc[0]["file_path"]))
                 folder_description = st.text_area(
@@ -290,7 +292,7 @@ else:  # Process page (default)
                     height=100,
                     key="process_folder_description"
                 )
-                
+
                 if st.button("Export Results"):
                     # Add folder description to the results DataFrame
                     results_df = st.session_state.results.copy()
@@ -298,26 +300,26 @@ else:  # Process page (default)
                     results_df["item_description"] = results_df.apply(
                         lambda row: f"Image analysis of {row['file_name']} from folder {folder_name}", axis=1
                     )
-                    
+
                     if export_format == "CSV":
                         export_filename = export_to_csv(results_df, folder_name)
                         st.success(f"Results exported to {export_filename}")
-                        
+
                     elif export_format == "Excel":
                         export_filename = export_to_excel(results_df, folder_name)
                         st.success(f"Results exported to {export_filename}")
-                        
+
                     elif export_format == "PDF (Simple)":
                         with st.spinner("Generating PDF..."):
                             export_filename = export_to_pdf_simple(results_df, folder_name)
                         st.success(f"Results exported to {export_filename}")
-                        
+
                     elif export_format == "PDF (Detailed)":
                         with st.spinner("Generating detailed PDF report with images..."):
                             include_imgs = include_images if 'include_images' in locals() else True
                             export_filename = export_to_pdf_detailed(results_df, folder_name, include_imgs)
                         st.success(f"Results exported to {export_filename}")
-                    
+
                     # Provide download link
                     with open(export_filename, "rb") as file:
                         btn = st.download_button(
@@ -328,20 +330,20 @@ else:  # Process page (default)
                         )
             else:
                 st.info("No results to display")
-        
+
         with tab2:
             # Check if an image is selected
             if st.session_state.selected_image:
                 selected_path = st.session_state.selected_image
                 selected_result = st.session_state.processed_images.get(selected_path, {})
-                
+
                 # Display image details
                 col1, col2 = st.columns([1, 2])
-                
+
                 with col1:
                     st.subheader("Image")
                     st.image(selected_path, use_column_width=True)
-                
+
                 with col2:
                     st.subheader("Analysis Results")
                     st.markdown(f"**File:** {os.path.basename(selected_path)}")
@@ -349,7 +351,7 @@ else:  # Process page (default)
                     st.markdown(f"**Confidence:** {selected_result.get('confidence', 0):.2f}")
                     st.markdown("### Description")
                     st.markdown(selected_result.get('description', 'No description available'))
-                    
+
                     # Display metadata if available
                     if 'metadata' in selected_result:
                         st.markdown("### Image Metadata")

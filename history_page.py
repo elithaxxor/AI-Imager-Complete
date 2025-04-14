@@ -8,8 +8,12 @@ def show_history_page():
     """
     Display the history of processed folders and allow browsing previous analysis results
     """
-    st.header("Analysis History")
-    st.write("Browse previously analyzed image folders")
+    st.markdown("""
+    <div class="card-header">
+        <h2>Analysis History</h2>
+        <p>Browse previously analyzed image folders and their results</p>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Get all folders from the database
     folders = get_all_folders()

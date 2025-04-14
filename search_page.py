@@ -8,8 +8,12 @@ def show_search_page():
     """
     Display a search interface for finding images by object name, description, or metadata
     """
-    st.header("Search Images")
-    st.write("Search the database for specific objects, descriptions, or metadata")
+    st.markdown("""
+    <div class="card-header">
+        <h2>Search Images</h2>
+        <p>Find specific objects, descriptions, or metadata in your analyzed images</p>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Search input
     search_query = st.text_input("Search for objects, descriptions, or metadata", 
