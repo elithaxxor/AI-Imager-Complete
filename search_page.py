@@ -6,28 +6,27 @@ from export_utils import export_to_csv, export_to_excel, export_to_pdf_simple, e
 
 def show_search_page():
     """
-    Display a search interface to find images by description or object name
+    Display a search interface for finding images by object name, description, or metadata
     """
     st.markdown("""
     <div class="card">
         <div class="card-header">
-            <h2>Image Search</h2>
-            <p>Search for images by object name, description, or camera details</p>
+            <h2>Search Images</h2>
+            <p>Find specific objects, descriptions, or metadata in your analyzed images</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # Search interface - made more mobile friendly
-    query = st.text_input("Search for images", 
-                          placeholder="Enter search terms...",
-                          help="Search is case insensitive and will match partial words")
+    # Search input
+    search_query = st.text_input("Search for objects, descriptions, or metadata", 
+                                help="Enter keywords to search. Examples: 'cat', 'mountain', 'sunset', 'iPhone', 'Canon', 'JPEG', etc.")
 
     # Execute search when a query is entered
-    if query:
-        results = search_images(query)
+    if search_query:
+        results = search_images(search_query)
 
         if not results:
-            st.info(f"No results found for '{query}'")
+            st.info(f"No results found for '{search_query}'")
             return
 
         # Convert to DataFrame for better display
@@ -50,6 +49,7 @@ def show_search_page():
         # Display as a table
         st.dataframe(
             result_df[["file_name", "folder_name", "object_name", "confidence", "camera_info", "file_type", "description_snippet"]],
+            use_container_width=True, #Added for mobile optimization
             column_config={
                 "file_name": "Image Name",
                 "folder_name": "Folder",
@@ -79,7 +79,7 @@ def show_search_page():
         # Add text area for folder description
         folder_description = st.text_area(
             "Folder Description (will be included in exports)",
-            value=f"Collection of images related to '{query}'",
+            value=f"Collection of images related to '{search_query}'",
             height=100,
             key="search_folder_description"
         )
@@ -97,28 +97,28 @@ def show_search_page():
                     "confidence": img.confidence,
                     "processed_at": img.processed_at.strftime("%Y-%m-%d %H:%M:%S"),
                     "folder_description": folder_description,
-                    "item_description": f"Found in search for '{query}'"
+                    "item_description": f"Found in search for '{search_query}'"
                 })
 
             export_df = pd.DataFrame(export_data)
 
             if export_format == "CSV":
-                export_filename = export_to_csv(export_df, f"search_results_{query}")
+                export_filename = export_to_csv(export_df, f"search_results_{search_query}")
                 st.success(f"Results exported to {export_filename}")
 
             elif export_format == "Excel":
-                export_filename = export_to_excel(export_df, f"search_results_{query}")
+                export_filename = export_to_excel(export_df, f"search_results_{search_query}")
                 st.success(f"Results exported to {export_filename}")
 
             elif export_format == "PDF (Simple)":
                 with st.spinner("Generating PDF..."):
-                    export_filename = export_to_pdf_simple(export_df, f"search_results_{query}")
+                    export_filename = export_to_pdf_simple(export_df, f"search_results_{search_query}")
                 st.success(f"Results exported to {export_filename}")
 
             elif export_format == "PDF (Detailed)":
                 with st.spinner("Generating detailed PDF report with images..."):
                     include_imgs = include_images if 'include_images' in locals() else True
-                    export_filename = export_to_pdf_detailed(export_df, f"search_results_{query}", include_imgs)
+                    export_filename = export_to_pdf_detailed(export_df, f"search_results_{search_query}", include_imgs)
                 st.success(f"Results exported to {export_filename}")
 
             # Provide download link
@@ -179,9 +179,9 @@ def show_search_result_details(image_id):
         st.markdown(image.description)
 
         # Highlight search terms in description
-        if 'query' in locals() and query:
+        if 'search_query' in st.session_state and st.session_state.search_query:
             highlighted_desc = image.description
-            for term in query.split():
+            for term in st.session_state.search_query.split():
                 if len(term) > 2:  # Only highlight terms with more than 2 characters
                     highlighted_desc = highlighted_desc.replace(
                         term, f"<mark>{term}</mark>"
