@@ -2,7 +2,8 @@
 import streamlit as st
 import os
 import pandas as pd
-from database import get_all_folders, get_images_by_folder_id
+from database import get_all_folders, get_images_by_folder_id, FavoriteImage
+import database as db
 from export_utils import export_to_csv, export_to_excel, export_to_pdf_simple, export_to_pdf_detailed
 
 def show_history_page():
