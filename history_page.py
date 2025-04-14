@@ -224,6 +224,119 @@ def show_image_details(image_id):
     st.markdown(f"**Processed Date:** {image.processed_at.strftime('%Y-%m-%d %H:%M:%S')}")
     st.markdown(f"**Full Path:** {image.file_path}")
     
+    # Add to dashboard button and related functionality
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Check if image is already in favorites
+        existing_favorite = None
+        try:
+            db_session = db.get_db()
+            existing_favorite = db_session.query(db.FavoriteImage).filter(
+                db.FavoriteImage.image_id == image.id
+            ).first()
+        except:
+            pass
+    
+        if existing_favorite:
+            st.success("This image is in your dashboard")
+            if st.button("Remove from Dashboard"):
+                db.remove_from_favorites(existing_favorite.id)
+                st.success("Removed from dashboard")
+                st.rerun()
+        else:
+            if st.button("Add to Dashboard"):
+                st.session_state.add_to_dashboard_image_id = image.id
+                st.rerun()
+                
+    with col2:
+        if st.button("Export Details"):
+            # Create a DataFrame with this image for export
+            image_data = [{
+                "Object": image.object_name,
+                "Description": image.description,
+                "Confidence": image.confidence,
+                "File Name": image.file_name,
+                "File Path": image.file_path,
+                "Folder": image.folder.name,
+            }]
+            df = pd.DataFrame(image_data)
+            
+            # Show export options
+            st.session_state.export_single_image_data = df
+            st.session_state.export_single_image_id = image.id
+            st.rerun()
+    
+    # Check if we need to show add to dashboard form
+    if 'add_to_dashboard_image_id' in st.session_state and st.session_state.add_to_dashboard_image_id == image.id:
+        st.subheader("Add to Dashboard")
+        
+        with st.form("add_to_dashboard_form"):
+            custom_label = st.text_input("Custom Label", value=image.object_name)
+            note = st.text_area("Note", placeholder="Add notes about why this image is important")
+            display_order = st.number_input("Display Order", value=0, min_value=0, 
+                help="Lower numbers appear first in the dashboard")
+            
+            submitted = st.form_submit_button("Add to Dashboard")
+            
+            if submitted:
+                try:
+                    db.add_to_favorites(
+                        image_id=image.id,
+                        custom_label=custom_label,
+                        note=note,
+                        display_order=display_order
+                    )
+                    st.success("Added to dashboard successfully!")
+                    del st.session_state.add_to_dashboard_image_id
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Error adding to dashboard: {e}")
+    
+    # Check if we need to show export options
+    if 'export_single_image_data' in st.session_state and 'export_single_image_id' in st.session_state and st.session_state.export_single_image_id == image.id:
+        st.subheader("Export Options")
+        
+        export_format = st.selectbox("Export Format", ["CSV", "Excel", "PDF (Simple)", "PDF (Detailed)"])
+        
+        # Include images option for detailed PDF
+        include_images = False
+        if export_format == "PDF (Detailed)":
+            include_images = st.checkbox("Include Image", value=True)
+        
+        if st.button("Generate Export"):
+            df = st.session_state.export_single_image_data
+            
+            if export_format == "CSV":
+                export_filename = export_to_csv(df, f"image_{image.id}")
+                st.success(f"Exported to CSV: {export_filename}")
+            
+            elif export_format == "Excel":
+                export_filename = export_to_excel(df, f"image_{image.id}")
+                st.success(f"Exported to Excel: {export_filename}")
+            
+            elif export_format == "PDF (Simple)":
+                export_filename = export_to_pdf_simple(df, f"image_{image.id}")
+                st.success(f"Exported to PDF: {export_filename}")
+            
+            elif export_format == "PDF (Detailed)":
+                export_filename = export_to_pdf_detailed(df, f"image_{image.id}", include_images)
+                st.success(f"Exported to detailed PDF: {export_filename}")
+            
+            # Download link
+            with open(export_filename, "rb") as file:
+                st.download_button(
+                    label="Download Export",
+                    data=file,
+                    file_name=os.path.basename(export_filename),
+                    mime="application/octet-stream"
+                )
+                
+            # Clear export state
+            del st.session_state.export_single_image_data
+            del st.session_state.export_single_image_id
+            st.rerun()
+    
     # Display image metadata if available
     if hasattr(image, 'metadata_json') and image.metadata_json:
         st.markdown("### Image Metadata")
