@@ -1,3 +1,4 @@
+
 import streamlit as st
 import os
 import pandas as pd
@@ -12,7 +13,7 @@ def show_history_page():
     <div class="card">
         <div class="card-header">
             <h2>Analysis History</h2>
-            <p>Browse previously analyzed image folders and their results</p>
+            <p>Browse previously analyzed image folders</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -38,17 +39,19 @@ def show_history_page():
     # Sort by most recent first
     folder_df = folder_df.sort_values(by="processed_at", ascending=False)
     
-    # Display as a table with mobile-friendly width
+    # Display as a table
+    st.markdown('<div class="card styled-table">', unsafe_allow_html=True)
     st.dataframe(
         folder_df[["name", "processed_at", "image_count"]],
+        use_container_width=True,
         column_config={
             "name": "Folder Name",
             "processed_at": st.column_config.DatetimeColumn("Processed Date", format="MMM DD, YYYY, hh:mm A"),
             "image_count": st.column_config.NumberColumn("Images")
         },
-        hide_index=True,
-        use_container_width=True
+        hide_index=True
     )
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Let user select a folder to view details
     selected_folder_id = st.selectbox(
@@ -86,8 +89,10 @@ def show_folder_images(folder_id):
     image_df = image_df.sort_values(by="file_name")
     
     # Display as a table
+    st.markdown('<div class="card styled-table">', unsafe_allow_html=True)
     st.dataframe(
         image_df[["file_name", "object_name", "confidence", "processed_at"]],
+        use_container_width=True,
         column_config={
             "file_name": "Image Name",
             "object_name": "Object Identified",
@@ -96,32 +101,39 @@ def show_folder_images(folder_id):
         },
         hide_index=True
     )
-    
-    # Add export options
-    st.subheader("Export Options")
-    
-    st.markdown('<div class="export-options">', unsafe_allow_html=True)
-    export_format = st.selectbox("Export Format", 
-                                ["CSV", "Excel", "PDF (Simple)", "PDF (Detailed)"],
-                                key="history_export_format")
-    
-    if export_format.startswith("PDF"):
-        include_images = st.checkbox("Include Images in PDF", value=True, 
-                                    help="Include image previews in the PDF export (may increase file size)",
-                                    key="history_include_images")
     st.markdown('</div>', unsafe_allow_html=True)
     
+    # Export options for selected folder
+    st.subheader("Export Folder Results")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        export_format = st.selectbox(
+            "Export Format", 
+            ["CSV", "Excel", "PDF (Simple)", "PDF (Detailed)"],
+            key="history_export_format"
+        )
+    
+    with col2:
+        if export_format.startswith("PDF"):
+            include_images = st.checkbox(
+                "Include Images in PDF", 
+                value=True, 
+                help="Include image previews in the PDF export (may increase file size)",
+                key="history_include_images"
+            )
+    
     # Add text area for folder description
-    folder_name = images[0].folder.name if images and images[0].folder else "folder"
+    folder_name = image_df["file_name"].iloc[0] if not image_df.empty else "Unknown folder"
     folder_description = st.text_area(
         "Folder Description (will be included in exports)",
-        value=f"Collection of images from folder '{folder_name}'",
+        value=f"Analysis results from folder '{folder_name}'",
         height=100,
         key="history_folder_description"
     )
     
     if st.button("Export Results", key="history_export_button"):
-        # Construct a proper dataframe for export with all fields
+        # Create export DataFrame
         export_data = []
         for img in images:
             export_data.append({
@@ -131,30 +143,28 @@ def show_folder_images(folder_id):
                 "description": img.description,
                 "confidence": img.confidence,
                 "processed_at": img.processed_at.strftime("%Y-%m-%d %H:%M:%S"),
-                "folder_description": folder_description,
-                "item_description": f"Image from folder '{folder_name}'"
+                "folder_description": folder_description
             })
         
         export_df = pd.DataFrame(export_data)
-        folder_name = images[0].folder.name if images and images[0].folder else "folder"
         
         if export_format == "CSV":
-            export_filename = export_to_csv(export_df, folder_name)
+            export_filename = export_to_csv(export_df, f"folder_history_{folder_name}")
             st.success(f"Results exported to {export_filename}")
-            
+        
         elif export_format == "Excel":
-            export_filename = export_to_excel(export_df, folder_name)
+            export_filename = export_to_excel(export_df, f"folder_history_{folder_name}")
             st.success(f"Results exported to {export_filename}")
-            
+        
         elif export_format == "PDF (Simple)":
             with st.spinner("Generating PDF..."):
-                export_filename = export_to_pdf_simple(export_df, folder_name)
+                export_filename = export_to_pdf_simple(export_df, f"folder_history_{folder_name}")
             st.success(f"Results exported to {export_filename}")
-            
+        
         elif export_format == "PDF (Detailed)":
             with st.spinner("Generating detailed PDF report with images..."):
                 include_imgs = include_images if 'include_images' in locals() else True
-                export_filename = export_to_pdf_detailed(export_df, folder_name, include_imgs)
+                export_filename = export_to_pdf_detailed(export_df, f"folder_history_{folder_name}", include_imgs)
             st.success(f"Results exported to {export_filename}")
         
         # Provide download link
@@ -166,9 +176,8 @@ def show_folder_images(folder_id):
                 mime="application/octet-stream",
                 key="history_download_button"
             )
-
+    
     # Let user select an image to view details
-    st.subheader("View Image Details")
     selected_image_id = st.selectbox(
         "Select an image to view details",
         options=image_df["id"].tolist(),
@@ -192,49 +201,48 @@ def show_image_details(image_id):
         st.error("Image not found")
         return
     
-    # Display image details
-    col1, col2 = st.columns([1, 2])
+    # Display image details in a card
+    st.markdown('<div class="card">', unsafe_allow_html=True)
     
     # Check if file exists first
     if os.path.exists(image.file_path):
-        with col1:
-            st.subheader("Image")
-            st.image(image.file_path, use_column_width=True)
+        st.markdown('<div class="image-container">', unsafe_allow_html=True)
+        st.image(image.file_path, use_column_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
     else:
-        with col1:
-            st.subheader("Image")
-            st.warning("Image file not found at path: " + image.file_path)
+        st.warning("Image file not found at path: " + image.file_path)
     
-    with col2:
-        st.subheader("Analysis Results")
-        st.markdown(f"**File:** {image.file_name}")
-        st.markdown(f"**Object Identified:** {image.object_name}")
-        st.markdown(f"**Confidence:** {image.confidence:.2f}")
-        st.markdown("### Description")
-        st.markdown(image.description)
-        
-        # Additional metadata
-        st.markdown("### File Metadata")
-        st.markdown(f"**Processed Date:** {image.processed_at.strftime('%Y-%m-%d %H:%M:%S')}")
-        st.markdown(f"**Full Path:** {image.file_path}")
-        
-        # Display image metadata if available
-        if hasattr(image, 'metadata_json') and image.metadata_json:
-            st.markdown("### Image Metadata")
-            try:
-                from utils import format_metadata_for_display
-                import json
-                
-                # Create metadata dictionary from database fields
-                metadata = {}
-                for field in ['width', 'height', 'camera_make', 'camera_model', 
-                            'focal_length', 'aperture', 'exposure_time', 'iso_speed',
-                            'date_taken', 'gps_latitude', 'gps_longitude',
-                            'file_size', 'file_type']:
-                    if hasattr(image, field):
-                        metadata[field] = getattr(image, field)
-                
-                metadata_text = format_metadata_for_display(metadata)
-                st.markdown(metadata_text)
-            except Exception as e:
-                st.error(f"Error displaying metadata: {str(e)}")
+    st.subheader("Analysis Results")
+    st.markdown(f"**File:** {image.file_name}")
+    st.markdown(f"**Object Identified:** {image.object_name}")
+    st.markdown(f"**Confidence:** {image.confidence:.2f}")
+    st.markdown("### Description")
+    st.markdown(image.description)
+    
+    # Additional metadata
+    st.markdown("### Metadata")
+    st.markdown(f"**Processed Date:** {image.processed_at.strftime('%Y-%m-%d %H:%M:%S')}")
+    st.markdown(f"**Full Path:** {image.file_path}")
+    
+    # Display image metadata if available
+    if hasattr(image, 'metadata_json') and image.metadata_json:
+        st.markdown("### Image Metadata")
+        try:
+            from utils import format_metadata_for_display
+            import json
+            
+            # Create metadata dictionary from database fields
+            metadata = {}
+            for field in ['width', 'height', 'camera_make', 'camera_model', 
+                        'focal_length', 'aperture', 'exposure_time', 'iso_speed',
+                        'date_taken', 'gps_latitude', 'gps_longitude',
+                        'file_size', 'file_type']:
+                if hasattr(image, field):
+                    metadata[field] = getattr(image, field)
+            
+            metadata_text = format_metadata_for_display(metadata)
+            st.markdown(metadata_text)
+        except Exception as e:
+            st.error(f"Error displaying metadata: {str(e)}")
+    
+    st.markdown('</div>', unsafe_allow_html=True)

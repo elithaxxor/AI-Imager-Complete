@@ -1,21 +1,20 @@
 
 [theme]
-primaryColor = "#4e89ae"
-backgroundColor = "#f5f7fa"
-secondaryBackgroundColor = "#e4ecf6"
-textColor = "#1e1e1e"
-font = "sans serif"
+base="dark"
+primaryColor="#7C8AFF"
+backgroundColor="#0E1117"
+secondaryBackgroundColor="#262730"
+textColor="#FAFAFA"
 
 [server]
 enableCORS = false
-enableXsrfProtection = true
-enableWebsocketCompression = true
-headless = true
-port = 5000
+enableXsrfProtection = false  # Disabled for download functionality
 
 [browser]
 gatherUsageStats = false
 
-[ui]
-hideTopBar = false
-hideSidebarNav = false
+[deprecation]
+showfileUploaderEncoding = false
+
+[global]
+disableWidgetStateDuplication = true
