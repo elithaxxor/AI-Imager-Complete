@@ -54,7 +54,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-col1, col2, col3, col4, col5 = st.columns(5)
+col1, col2, col3, col4 = st.columns(4)
 with col1:
     if st.button("Process Images", use_container_width=True):
         st.session_state.current_page = "process"
@@ -71,7 +71,8 @@ with col4:
     if st.button("Dashboard", use_container_width=True):
         st.session_state.current_page = "dashboard"
         st.rerun()
-with col5:
+
+with st.columns(1)[0]:
     if st.button("Download Code", use_container_width=True):
         # Redirect to the code download page
         import streamlit as st
@@ -359,7 +360,7 @@ else:  # Process page (default)
                 st.markdown('<div class="image-container">', unsafe_allow_html=True)
                 st.image(selected_path, use_column_width=True)
                 st.markdown('</div>', unsafe_allow_html=True)
-                
+
                 st.subheader("Analysis Results")
                 st.markdown(f"**File:** {os.path.basename(selected_path)}")
                 st.markdown(f"**Object Identified:** {selected_result.get('object_name', 'Unknown')}")
