@@ -9,8 +9,20 @@ import datetime
 # Get database URL from environment variables
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
-# Create SQLAlchemy engine
-engine = create_engine(DATABASE_URL)
+# Modify URL for connection pooling
+if DATABASE_URL:
+    pool_url = DATABASE_URL.replace('.us-east-2', '-pooler.us-east-2')
+    # Create SQLAlchemy engine with connection pool
+    engine = create_engine(
+        pool_url,
+        pool_size=5,
+        max_overflow=10,
+        pool_timeout=30,
+        pool_recycle=1800,
+        pool_pre_ping=True
+    )
+else:
+    raise Exception("DATABASE_URL environment variable not set")
 
 # Create declarative base
 Base = declarative_base()
