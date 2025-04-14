@@ -397,10 +397,5 @@ st.markdown("---")
 st.markdown("@copyleft -- don't do stupid shit with my work.")
 
 
-def show_clustering_page():
-    st.title("Image Clustering")
-    st.write("This page will show image clusters (Placeholder)")
-
-def show_comparison_page():
-    st.title("Image Comparison")
-    st.write("This page will allow image comparison (Placeholder)")
+from image_clustering import show_clustering_page
+from comparison_tool import show_comparison_page

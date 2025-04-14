@@ -611,14 +611,30 @@ def show_export_options(images):
 if __name__ == "__main__":
     show_image_dashboard_page()
 import streamlit as st
+import os
 import pandas as pd
 import altair as alt
 import database as db
-from database import get_db, Image, Folder
+from database import get_db, Image, Folder, get_all_favorites, get_favorite_by_id, update_favorite_details
+from database import update_favorite_order, remove_from_favorites, add_to_favorites
 from sqlalchemy import func, desc
 import datetime
+from export_utils import export_to_csv, export_to_excel, export_to_pdf_simple, export_to_pdf_detailed
 
 def show_dashboard_page():
+    """
+    Display the dashboard with both analytics and image dashboard
+    """
+    # Create tabs for dashboard sections
+    tab1, tab2 = st.tabs(["Analytics Dashboard", "Image Dashboard"])
+    
+    with tab1:
+        show_analytics_dashboard()
+    
+    with tab2:
+        show_image_dashboard_page()
+
+def show_analytics_dashboard():
     """
     Display an analytics dashboard for the image collection
     """

@@ -375,3 +375,58 @@ button, input, select, textarea {
         background-color: #2a2a2a;
     }
 }
+
+/* Custom styling for the application */
+
+/* App header */
+.app-header {
+    background-color: #f0f2f6;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border-radius: 0.5rem;
+    text-align: center;
+}
+
+/* Card styling for clustering */
+.cluster-card {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Chart container for better visualization */
+.chart-container {
+    background-color: white;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Comparison highlighting */
+.diff-highlight {
+    background-color: #ffecb3;
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+.diff-added {
+    background-color: #c8e6c9;
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+.diff-removed {
+    background-color: #ffcdd2;
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+/* Cluster groups */
+.cluster-group {
+    border-left: 4px solid #4285f4;
+    padding-left: 1rem;
+    margin-bottom: 1rem;
+}
