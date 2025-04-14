@@ -14,4 +14,6 @@ dependencies = [
     "sqlalchemy>=2.0.40",
     "streamlit>=1.44.1",
     "exifread>=3.0.0",
+    "python-dotenv>=1.1.0",
+    "openpyxl>=3.1.5",
 ]
