@@ -9,6 +9,7 @@ import database as db
 from history_page import show_history_page
 from search_page import show_search_page
 from dashboard_page import show_dashboard_page
+from onboarding_tour import show_onboarding_tour
 from export_utils import export_to_csv, export_to_excel, export_to_pdf_simple, export_to_pdf_detailed
 
 # Set page config
@@ -34,7 +35,17 @@ if 'selected_image' not in st.session_state:
 if 'processed_images' not in st.session_state:
     st.session_state.processed_images = {}
 if 'current_page' not in st.session_state:
-    st.session_state.current_page = "process"
+    st.session_state.current_page = "onboarding"  # Start with onboarding tour
+if 'tour_step' not in st.session_state:
+    st.session_state.tour_step = 1
+if 'tour_completed' not in st.session_state:
+    st.session_state.tour_completed = False
+    
+# Check if first launch - show onboarding
+first_launch = 'first_launch' not in st.session_state
+if first_launch:
+    st.session_state.first_launch = False
+    st.session_state.current_page = "onboarding"
 
 # Main title
 st.markdown('<div class="app-header">', unsafe_allow_html=True)
@@ -140,6 +151,15 @@ with st.sidebar:
         if parent_dir:
             st.error("Directory not found. Please enter a valid path")
 
+# Add Tour button in sidebar if tour completed
+with st.sidebar:
+    if st.session_state.tour_completed:
+        if st.button("🚀 Restart AI Discovery Tour", use_container_width=True):
+            st.session_state.tour_step = 1
+            st.session_state.tour_completed = False
+            st.session_state.current_page = "onboarding"
+            st.rerun()
+
 # Show the appropriate page based on selection
 if st.session_state.current_page == "history":
     show_history_page()
@@ -151,6 +171,8 @@ elif st.session_state.current_page == "clusters":
     show_clustering_page()
 elif st.session_state.current_page == "compare":
     show_comparison_page()
+elif st.session_state.current_page == "onboarding":
+    show_onboarding_tour()
 else:  # Process page (default)
     # Main content area for processing
     if st.session_state.processing and st.session_state.current_folder:
@@ -396,6 +418,6 @@ else:  # Process page (default)
 st.markdown("---")
 st.markdown("@copyleft -- don't do stupid shit with my work.")
 
-
-from image_clustering import show_clustering_page
-from comparison_tool import show_comparison_page
+# Import at the top of the file instead
+# from clustering_page import show_clustering_page 
+# from comparison_page import show_comparison_page
