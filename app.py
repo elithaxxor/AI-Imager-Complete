@@ -72,7 +72,17 @@ with col4:
         st.session_state.current_page = "dashboard"
         st.rerun()
 
-with st.columns(1)[0]:
+# Second row for additional features
+col1, col2, col3 = st.columns(3)
+with col1:
+    if st.button("Image Clusters", use_container_width=True):
+        st.session_state.current_page = "clusters"
+        st.rerun()
+with col2:
+    if st.button("Compare Images", use_container_width=True):
+        st.session_state.current_page = "compare"
+        st.rerun()
+with col3:
     if st.button("Download Code", use_container_width=True):
         # Redirect to the code download page
         import streamlit as st
@@ -137,6 +147,10 @@ elif st.session_state.current_page == "search":
     show_search_page()
 elif st.session_state.current_page == "dashboard":
     show_dashboard_page()
+elif st.session_state.current_page == "clusters":
+    show_clustering_page()
+elif st.session_state.current_page == "compare":
+    show_comparison_page()
 else:  # Process page (default)
     # Main content area for processing
     if st.session_state.processing and st.session_state.current_folder:
@@ -381,3 +395,12 @@ else:  # Process page (default)
 # Footer
 st.markdown("---")
 st.markdown("@copyleft -- don't do stupid shit with my work.")
+
+
+def show_clustering_page():
+    st.title("Image Clustering")
+    st.write("This page will show image clusters (Placeholder)")
+
+def show_comparison_page():
+    st.title("Image Comparison")
+    st.write("This page will allow image comparison (Placeholder)")

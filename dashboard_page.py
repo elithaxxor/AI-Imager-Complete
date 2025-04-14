@@ -6,7 +6,7 @@ from database import update_favorite_order, remove_from_favorites
 import database as db
 from export_utils import export_to_csv, export_to_excel, export_to_pdf_simple, export_to_pdf_detailed
 
-def show_dashboard_page():
+def show_image_dashboard_page():
     """
     Display the customizable dashboard with pinned favorite images
     """
@@ -609,7 +609,7 @@ def show_export_options(images):
 
 # Main dashboard layout and logic
 if __name__ == "__main__":
-    show_dashboard_page()
+    show_image_dashboard_page()
 import streamlit as st
 import pandas as pd
 import altair as alt
@@ -630,16 +630,16 @@ def show_dashboard_page():
         </div>
     </div>
     """, unsafe_allow_html=True)
-    
+
     # Get database statistics
     db_session = next(get_db())
     image_count = db_session.query(func.count(Image.id)).scalar()
     folder_count = db_session.query(func.count(Folder.id)).scalar()
-    
+
     if image_count == 0:
         st.info("No image data available. Process some images to see analytics.")
         return
-    
+
     # Display main stats in cards
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -649,7 +649,7 @@ def show_dashboard_page():
             <p style="text-align: center; font-size: 36px; font-weight: bold;">%s</p>
         </div>
         """ % image_count, unsafe_allow_html=True)
-    
+
     with col2:
         st.markdown("""
         <div class="card">
@@ -657,7 +657,7 @@ def show_dashboard_page():
             <p style="text-align: center; font-size: 36px; font-weight: bold;">%s</p>
         </div>
         """ % folder_count, unsafe_allow_html=True)
-    
+
     with col3:
         # Get average confidence score
         avg_confidence = db_session.query(func.avg(Image.confidence)).scalar() or 0
@@ -667,10 +667,10 @@ def show_dashboard_page():
             <p style="text-align: center; font-size: 36px; font-weight: bold;">%.2f</p>
         </div>
         """ % avg_confidence, unsafe_allow_html=True)
-    
+
     # Create tabs for different charts
     tab1, tab2, tab3 = st.tabs(["Object Distribution", "Processing Activity", "Image Metadata"])
-    
+
     with tab1:
         st.subheader("Most Common Objects")
         # Get top objects
@@ -678,11 +678,11 @@ def show_dashboard_page():
             Image.object_name, 
             func.count(Image.id).label('count')
         ).group_by(Image.object_name).order_by(desc('count')).limit(10).all()
-        
+
         if top_objects:
             # Convert to DataFrame
             df_objects = pd.DataFrame(top_objects, columns=['object_name', 'count'])
-            
+
             # Create bar chart
             chart = alt.Chart(df_objects).mark_bar().encode(
                 x=alt.X('count:Q', title='Count'),
@@ -692,24 +692,24 @@ def show_dashboard_page():
                 title='Top 10 Objects Identified',
                 height=400
             )
-            
+
             st.altair_chart(chart, use_container_width=True)
         else:
             st.info("Not enough data to generate object distribution chart.")
-    
+
     with tab2:
         st.subheader("Processing Activity")
-        
+
         # Get processing by date
         processing_dates = db_session.query(
             func.date(Image.processed_at).label('date'),
             func.count(Image.id).label('count')
         ).group_by('date').order_by('date').all()
-        
+
         if processing_dates:
             # Convert to DataFrame
             df_dates = pd.DataFrame(processing_dates, columns=['date', 'count'])
-            
+
             # Create line chart
             chart = alt.Chart(df_dates).mark_line(point=True).encode(
                 x=alt.X('date:T', title='Date'),
@@ -719,14 +719,14 @@ def show_dashboard_page():
                 title='Images Processed Over Time',
                 height=300
             )
-            
+
             st.altair_chart(chart, use_container_width=True)
         else:
             st.info("Not enough data to generate processing activity chart.")
-    
+
     with tab3:
         st.subheader("Image Metadata Analysis")
-        
+
         # Try to get camera distribution if metadata exists
         camera_data = []
         try:
@@ -734,16 +734,16 @@ def show_dashboard_page():
                 Image.camera_model, 
                 func.count(Image.id).label('count')
             ).filter(Image.camera_model.isnot(None)).group_by(Image.camera_model).order_by(desc('count')).limit(5).all()
-            
+
             if camera_models:
                 for model, count in camera_models:
                     if model and model.strip():
                         camera_data.append({'camera': model, 'count': count})
         except:
             pass
-        
+
         col1, col2 = st.columns(2)
-        
+
         with col1:
             if camera_data:
                 df_cameras = pd.DataFrame(camera_data)
@@ -758,7 +758,7 @@ def show_dashboard_page():
                 st.altair_chart(chart, use_container_width=True)
             else:
                 st.info("No camera metadata available")
-        
+
         with col2:
             # Try to get file type distribution
             file_types = []
@@ -767,14 +767,14 @@ def show_dashboard_page():
                     Image.file_type, 
                     func.count(Image.id).label('count')
                 ).filter(Image.file_type.isnot(None)).group_by(Image.file_type).order_by(desc('count')).all()
-                
+
                 if types:
                     for file_type, count in types:
                         if file_type and file_type.strip():
                             file_types.append({'type': file_type.upper(), 'count': count})
             except:
                 pass
-            
+
             if file_types:
                 df_types = pd.DataFrame(file_types)
                 chart = alt.Chart(df_types).mark_pie().encode(
@@ -788,40 +788,40 @@ def show_dashboard_page():
                 st.altair_chart(chart, use_container_width=True)
             else:
                 st.info("No file type metadata available")
-    
+
     # Feature usage section
     st.subheader("Feature Usage")
-    
+
     # Get counts from database
     favorites_count = db_session.query(func.count(db.FavoriteImage.id)).scalar() or 0
-    
+
     # Create metrics display
     col1, col2, col3 = st.columns(3)
-    
+
     with col1:
         # Calculate percentage of images added to favorites
         favorites_percent = (favorites_count / image_count * 100) if image_count > 0 else 0
         st.metric("Dashboard Items", favorites_count, f"{favorites_percent:.1f}% of images")
-    
+
     with col2:
         # Determine most active folder
         most_active_folder = db_session.query(
             Folder.name,
             func.count(Image.id).label('count')
         ).join(Image).group_by(Folder.id).order_by(desc('count')).first()
-        
+
         if most_active_folder:
             st.metric("Most Active Folder", most_active_folder[0], f"{most_active_folder[1]} images")
         else:
             st.metric("Most Active Folder", "None", "0 images")
-    
+
     with col3:
         # Try to get highest confidence image
         highest_conf_image = db_session.query(
             Image.file_name,
             Image.confidence
         ).order_by(desc(Image.confidence)).first()
-        
+
         if highest_conf_image:
             st.metric("Highest Confidence", f"{highest_conf_image[1]:.2f}", highest_conf_image[0])
         else:
