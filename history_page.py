@@ -99,18 +99,16 @@ def show_folder_images(folder_id):
     # Add export options
     st.subheader("Export Options")
     
-    col1, col2 = st.columns(2)
+    st.markdown('<div class="export-options">', unsafe_allow_html=True)
+    export_format = st.selectbox("Export Format", 
+                                ["CSV", "Excel", "PDF (Simple)", "PDF (Detailed)"],
+                                key="history_export_format")
     
-    with col1:
-        export_format = st.selectbox("Export Format", 
-                                    ["CSV", "Excel", "PDF (Simple)", "PDF (Detailed)"],
-                                    key="history_export_format")
-    
-    with col2:
-        if export_format.startswith("PDF"):
-            include_images = st.checkbox("Include Images in PDF", value=True, 
-                                        help="Include image previews in the PDF export (may increase file size)",
-                                        key="history_include_images")
+    if export_format.startswith("PDF"):
+        include_images = st.checkbox("Include Images in PDF", value=True, 
+                                    help="Include image previews in the PDF export (may increase file size)",
+                                    key="history_include_images")
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Add text area for folder description
     folder_name = images[0].folder.name if images and images[0].folder else "folder"

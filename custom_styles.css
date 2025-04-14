@@ -3,7 +3,7 @@
 
 /* Main container styling */
 .main-container {
-    padding: 2rem;
+    padding: 1rem;
     max-width: 1200px;
     margin: 0 auto;
 }
@@ -12,8 +12,8 @@
 .card {
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
     background-color: white;
     transition: all 0.3s ease;
 }
@@ -32,17 +32,21 @@
 .card-header h2 {
     color: #2c3e50;
     margin-bottom: 0.5rem;
+    font-size: clamp(1.2rem, 5vw, 1.5rem);
 }
 
 .card-header p {
     color: #7f8c8d;
-    font-size: 1rem;
+    font-size: 0.9rem;
 }
 
 /* Button styling */
 .custom-button {
     border-radius: 5px;
     transition: all 0.3s ease;
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
 }
 
 .custom-button:hover {
@@ -55,12 +59,19 @@
     border-radius: 8px;
     overflow: hidden;
     border: 1px solid #eee;
+    width: 100%;
 }
 
 /* Table styling */
 .styled-table {
     border-radius: 8px;
-    overflow: hidden;
+    overflow-x: auto;
+    width: 100%;
+}
+
+/* Make tables scrollable on mobile */
+.styled-table table {
+    min-width: 600px;
 }
 
 /* Status indicators */
@@ -90,10 +101,10 @@
 /* App header */
 .app-header {
     background: linear-gradient(90deg, #7C8AFF 0%, #9CC8FF 100%);
-    padding: 1rem 2rem;
+    padding: 1rem;
     border-radius: 10px;
     color: white;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
     text-align: center;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
@@ -102,17 +113,18 @@
     color: white !important;
     font-weight: 600;
     margin-bottom: 0.5rem;
+    font-size: clamp(1.5rem, 7vw, 2.5rem);
 }
 
-.app-header h3 {
+.app-header h3, .app-header .stSubheader {
     color: rgba(255, 255, 255, 0.9) !important;
     font-weight: 400;
-    font-size: 1.1rem;
+    font-size: clamp(0.9rem, 4vw, 1.1rem);
 }
 
 /* Analysis results display */
 .result-item {
-    padding: 1rem;
+    padding: 0.75rem;
     transition: all 0.2s ease;
 }
 
@@ -124,18 +136,84 @@
 .metadata-section {
     background-color: #f8f9fa;
     border-radius: 8px;
-    padding: 1rem;
-    margin-top: 1rem;
+    padding: 0.75rem;
+    margin-top: 0.75rem;
 }
 
 /* Navigation buttons */
 .nav-buttons {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 /* Tab styling */
 .custom-tabs {
-    margin-top: 1rem;
+    margin-top: 0.75rem;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+    /* Adjust sidebar for mobile */
+    .css-1r6slb0, .css-1d391kg {
+        width: 100% !important;
+    }
+    
+    /* Adjust column layouts for mobile */
+    .row-widget.stHorizontal > div {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    /* Make sure inputs and selectboxes are full width */
+    .stTextInput, .stSelectbox {
+        width: 100%;
+    }
+    
+    /* Make sure buttons stack nicely */
+    .stButton button {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Adjust padding for mobile */
+    .stTabs [data-baseweb="tab-panel"] {
+        padding: 0.5rem !important;
+    }
+    
+    /* Ensure tables can be scrolled horizontally on mobile */
+    .stDataFrame {
+        overflow-x: auto;
+    }
+    
+    /* Make images responsive */
+    .stImage img {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+/* Hide overflow on wide tables in mobile */
+.dataframe-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+/* Adjustments for form elements */
+button, input, select, textarea {
+    font-size: 16px !important;  /* Prevents zoom on mobile */
+}
+
+/* Export options layout */
+.export-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+@media (min-width: 768px) {
+    .export-options {
+        flex-direction: row;
+    }
 }

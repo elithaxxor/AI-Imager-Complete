@@ -1,10 +1,11 @@
+
 [server]
 headless = true
 address = "0.0.0.0"
 port = 5000
 
 [theme]
-base="light"
+base = "light"
 primaryColor = "#7C8AFF"
 backgroundColor = "#FFFFFF"
 secondaryBackgroundColor = "#F0F2F6"
@@ -13,10 +14,3 @@ font = "sans serif"
 
 [browser]
 gatherUsageStats = false
-
-[server]
-enableCORS = false
-enableXsrfProtection = false
-
-[ui]
-hideTopBar = false

@@ -344,14 +344,12 @@ else:  # Process page (default)
                 selected_result = st.session_state.processed_images.get(selected_path, {})
 
                 # Display image details
-                col1, col2 = st.columns([1, 2])
-
-                with col1:
-                    st.subheader("Image")
-                    st.image(selected_path, use_column_width=True)
-
-                with col2:
-                    st.subheader("Analysis Results")
+                # Use flexible columns for better mobile experience
+                st.markdown('<div class="image-container">', unsafe_allow_html=True)
+                st.image(selected_path, use_column_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+                
+                st.subheader("Analysis Results")
                     st.markdown(f"**File:** {os.path.basename(selected_path)}")
                     st.markdown(f"**Object Identified:** {selected_result.get('object_name', 'Unknown')}")
                     st.markdown(f"**Confidence:** {selected_result.get('confidence', 0):.2f}")
