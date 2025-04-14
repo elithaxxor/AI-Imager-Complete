@@ -17,6 +17,10 @@ st.set_page_config(
     layout="wide"
 )
 
+# Load custom CSS
+with open("custom_styles.css") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
 # Initialize session state variables if they don't exist
 if 'processing' not in st.session_state:
     st.session_state.processing = False
@@ -32,8 +36,10 @@ if 'current_page' not in st.session_state:
     st.session_state.current_page = "process"
 
 # Main title
-st.title("mommies toy")
+st.markdown('<div class="app-header">', unsafe_allow_html=True)
+st.title("AI Image Analyzer")
 st.subheader("Process folders of images to identify objects and generate descriptions")
+st.markdown('</div>', unsafe_allow_html=True)
 
 # Navigation
 st.markdown(

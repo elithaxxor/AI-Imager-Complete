@@ -15,12 +15,28 @@
     padding: 1.5rem;
     margin-bottom: 1.5rem;
     background-color: white;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
 }
 
 .card-header {
     margin-bottom: 1rem;
     border-bottom: 1px solid #eee;
     padding-bottom: 0.5rem;
+}
+
+.card-header h2 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.card-header p {
+    color: #7f8c8d;
+    font-size: 1rem;
 }
 
 /* Button styling */
@@ -74,11 +90,24 @@
 /* App header */
 .app-header {
     background: linear-gradient(90deg, #7C8AFF 0%, #9CC8FF 100%);
-    padding: 1.5rem;
+    padding: 1rem 2rem;
     border-radius: 10px;
     color: white;
     margin-bottom: 2rem;
     text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.app-header h1 {
+    color: white !important;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.app-header h3 {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 400;
+    font-size: 1.1rem;
 }
 
 /* Analysis results display */

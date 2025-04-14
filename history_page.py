@@ -9,9 +9,11 @@ def show_history_page():
     Display the history of processed folders and allow browsing previous analysis results
     """
     st.markdown("""
-    <div class="card-header">
-        <h2>Analysis History</h2>
-        <p>Browse previously analyzed image folders and their results</p>
+    <div class="card">
+        <div class="card-header">
+            <h2>Analysis History</h2>
+            <p>Browse previously analyzed image folders and their results</p>
+        </div>
     </div>
     """, unsafe_allow_html=True)
     
