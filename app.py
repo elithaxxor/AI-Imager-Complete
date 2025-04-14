@@ -70,7 +70,11 @@ with col4:
     if st.button("Download Code", use_container_width=True):
         # Redirect to the code download page
         import streamlit as st
-        st.switch_page("download_code.py")
+        # Change to download_zip.py if it exists, otherwise use the original
+        if os.path.exists("download_zip.py"):
+            st.switch_page("download_zip.py")
+        else:
+            st.switch_page("download_code.py")
 
 # Sidebar for folder selection
 with st.sidebar:
