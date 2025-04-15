@@ -74,6 +74,19 @@ args = "streamlit run download_zip.py --server.port 5001"
 task = "shell.exec"
 args = "streamlit run download_zip.py --server.port 5001"
 
+[[workflows.workflow]]
+name = "Export Project"
+author = 40212133
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python create_zip.py"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "streamlit run download_export.py --server.port 5002"
+
 [[ports]]
 localPort = 5000
 externalPort = 80
