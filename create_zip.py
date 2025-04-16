@@ -1,4 +1,4 @@
-
+# This script creates a zip file for the project excluding specified directories and files.
 import os
 import zipfile
 import datetime
