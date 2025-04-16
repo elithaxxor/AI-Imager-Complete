@@ -108,50 +108,91 @@ with col3:
 # Sidebar for folder selection
 with st.sidebar:
     st.header("Settings")
+    
+    # Add a tab selection for different input methods
+    input_method = st.radio("Choose Input Method", ["Upload Images", "Select Directory"])
+    
+    if input_method == "Upload Images":
+        # File uploader for direct image uploads
+        uploaded_files = st.file_uploader(
+            "Upload Images", 
+            accept_multiple_files=True,
+            type=["jpg", "jpeg", "png", "bmp", "gif", "webp", "heic", "heif"],
+            help="Select multiple images to analyze"
+        )
+        
+        if uploaded_files:
+            st.info(f"Selected {len(uploaded_files)} images for processing")
+            
+            # Create a temporary directory to store uploaded files if needed
+            if 'upload_dir' not in st.session_state:
+                import tempfile
+                st.session_state.upload_dir = tempfile.mkdtemp()
+                st.session_state.current_folder = st.session_state.upload_dir
+            
+            # Process button for uploaded files
+            if st.button("Process Uploaded Images", use_container_width=True, disabled=st.session_state.processing):
+                # Save uploaded files to temp directory
+                saved_files = []
+                for uploaded_file in uploaded_files:
+                    file_path = os.path.join(st.session_state.upload_dir, uploaded_file.name)
+                    with open(file_path, "wb") as f:
+                        f.write(uploaded_file.getbuffer())
+                    saved_files.append(file_path)
+                
+                if saved_files:
+                    st.session_state.processing = True
+                    st.session_state.results = None
+                    st.session_state.processed_images = {}
+                    st.session_state.selected_image = None
+                    st.session_state.upload_files = saved_files
+                    st.rerun()
+                    
+    else:  # Select Directory method
+        # Option to select parent directory
+        st.warning("Note: Directory selection requires permission from your browser and may not work in all environments.")
+        parent_dir = st.text_input("Parent Directory Path", 
+                                  value=os.path.expanduser("~") if not st.session_state.current_folder else st.session_state.current_folder,
+                                  help="Enter the path to the directory containing your image folders")
 
-    # Option to select parent directory
-    parent_dir = st.text_input("Parent Directory Path", 
-                              value=os.path.expanduser("~") if not st.session_state.current_folder else st.session_state.current_folder,
-                              help="Enter the path to the directory containing your image folders")
+        if parent_dir and os.path.exists(parent_dir):
+            # Get all subdirectories
+            subdirs = [d for d in os.listdir(parent_dir) if os.path.isdir(os.path.join(parent_dir, d))]
 
-    if parent_dir and os.path.exists(parent_dir):
-        # Get all subdirectories
-        subdirs = [d for d in os.listdir(parent_dir) if os.path.isdir(os.path.join(parent_dir, d))]
+            if subdirs:
+                # Folder selection dropdown
+                selected_folder = st.selectbox(
+                    "Select Image Folder", 
+                    [""] + subdirs,
+                    help="Choose a folder to analyze"
+                )
 
-        if subdirs:
-            # Folder selection dropdown
-            selected_folder = st.selectbox(
-                "Select Image Folder", 
-                [""] + subdirs,
-                help="Choose a folder to analyze"
-            )
+                if selected_folder:
+                    folder_path = os.path.join(parent_dir, selected_folder)
 
-            if selected_folder:
-                folder_path = os.path.join(parent_dir, selected_folder)
+                    # Count images in the folder
+                    image_files = get_all_image_files(folder_path)
 
-                # Count images in the folder
-                image_files = get_all_image_files(folder_path)
+                    if image_files:
+                        st.info(f"Found {len(image_files)} images in this folder")
 
-                if image_files:
-                    st.info(f"Found {len(image_files)} images in this folder")
+                        # Store current folder
+                        st.session_state.current_folder = parent_dir
 
-                    # Store current folder
-                    st.session_state.current_folder = parent_dir
-
-                    # Process button
-                    if st.button("Process Folder", use_container_width=True, disabled=st.session_state.processing):
-                        st.session_state.processing = True
-                        st.session_state.results = None
-                        st.session_state.processed_images = {}
-                        st.session_state.selected_image = None
-                        st.rerun()
-                else:
-                    st.warning("No valid images found in this folder. Supported formats: JPG, JPEG, PNG")
+                        # Process button
+                        if st.button("Process Folder", use_container_width=True, disabled=st.session_state.processing):
+                            st.session_state.processing = True
+                            st.session_state.results = None
+                            st.session_state.processed_images = {}
+                            st.session_state.selected_image = None
+                            st.rerun()
+                    else:
+                        st.warning("No valid images found in this folder. Supported formats: JPG, JPEG, PNG")
+            else:
+                st.warning("No subdirectories found in the selected path")
         else:
-            st.warning("No subdirectories found in the selected path")
-    else:
-        if parent_dir:
-            st.error("Directory not found. Please enter a valid path")
+            if parent_dir:
+                st.error("Directory not found. Please enter a valid path")
 
 # Add Tour button in sidebar if tour completed
 with st.sidebar:
@@ -178,20 +219,29 @@ elif st.session_state.current_page == "onboarding":
 else:  # Process page (default)
     # Main content area for processing
     if st.session_state.processing and st.session_state.current_folder:
-        # Find folder with images
-        selected_folder = ""
-        for d in os.listdir(st.session_state.current_folder):
-            if os.path.isdir(os.path.join(st.session_state.current_folder, d)):
-                if get_all_image_files(os.path.join(st.session_state.current_folder, d)):
-                    selected_folder = d
-                    break
+        # Check if we have uploaded files to process
+        if 'upload_files' in st.session_state and st.session_state.upload_files:
+            image_files = st.session_state.upload_files
+            folder_name = "Uploaded_Images"
+            full_folder_path = st.session_state.upload_dir
+        else:
+            # Find folder with images from directory selection
+            selected_folder = ""
+            for d in os.listdir(st.session_state.current_folder):
+                if os.path.isdir(os.path.join(st.session_state.current_folder, d)):
+                    if get_all_image_files(os.path.join(st.session_state.current_folder, d)):
+                        selected_folder = d
+                        break
 
-        if not selected_folder:
-            st.error("Could not find a folder with valid images")
-            st.session_state.processing = False
-            st.rerun()
+            if not selected_folder:
+                st.error("Could not find a folder with valid images")
+                st.session_state.processing = False
+                st.rerun()
 
-        full_folder_path = os.path.join(st.session_state.current_folder, selected_folder)
+            full_folder_path = os.path.join(st.session_state.current_folder, selected_folder)
+            folder_name = selected_folder
+            # Get all images in the folder
+            image_files = get_all_image_files(full_folder_path)
 
         # Display processing status
         with st.spinner("Processing images... This may take a while depending on the number of images."):
@@ -199,8 +249,6 @@ else:  # Process page (default)
             progress_bar = st.progress(0)
             status_text = st.empty()
 
-            # Get all images in the folder
-            image_files = get_all_image_files(full_folder_path)
             total_images = len(image_files)
 
             if total_images > 0:
@@ -208,7 +256,6 @@ else:  # Process page (default)
 
                 # Process each image
                 # Add folder to database
-                folder_name = os.path.basename(full_folder_path)
                 db_folder = db.add_folder(folder_name, full_folder_path)
 
                 for i, img_path in enumerate(image_files):
@@ -276,6 +323,9 @@ else:  # Process page (default)
 
         # Reset processing flag
         st.session_state.processing = False
+        # Clean up upload files reference if it exists
+        if 'upload_files' in st.session_state:
+            del st.session_state.upload_files
         st.rerun()
 
     # Display results
