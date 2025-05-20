@@ -5,13 +5,28 @@ from sqlalchemy import create_engine, Column, Integer, String, Float, Text, Date
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 import datetime
+import os
+from dotenv import load_dotenv
+from urllib.parse import urlparse
+import psycopg2
 
-# Get database URL from environment variables
-DATABASE_URL = os.environ.get("DATABASE_URL")
+#
+# # Get database URL from environment variables
+# DATABASE_URL = os.getenv("DATABASE_URL")
+# if not DATABASE_URL:
+#     raise Exception("DATABASE_URL environment variable not set. Please set it in your environment.")
 
-# Modify URL for connection pooling
-if DATABASE_URL:
-    pool_url = DATABASE_URL.replace('.us-east-2', '-pooler.us-east-2')
+# Load the environment variables from the .env file located in the project_files directory
+load_dotenv(dotenv_path='./project_files/.env')
+
+database_url = os.environ.get("DATABASE_URL")
+if database_url:
+    # Parse the DATABASE_URL to extract parts
+    parsed_url = urlparse(database_url)
+    # The database name is in the path (remove the leading slash)
+    db_name = parsed_url.path.lstrip("/")
+    print("Database name:", db_name)
+    pool_url = database_url.replace('.us-east-2', '-pooler.us-east-2')
     # Create SQLAlchemy engine with connection pool
     engine = create_engine(
         pool_url,
@@ -19,10 +34,10 @@ if DATABASE_URL:
         max_overflow=10,
         pool_timeout=30,
         pool_recycle=1800,
-        pool_pre_ping=True
-    )
+        pool_pre_ping=True)
+
 else:
-    raise Exception("DATABASE_URL environment variable not set")
+     print("DATABASE_URL environment variable not set")
 
 # Create declarative base
 Base = declarative_base()

@@ -41,3 +41,5 @@ replit.nix
 .DS_Store
 *.tmp
 *.temp
+
+.qodo
